@@ -10,7 +10,6 @@ export default function Navbar() {
         <Link to="/" className="brand">
           <span className="brand-mark"><ShipWheel size={19} /></span>
           <span>
-            GoComet
             <small>RFQ Auction Control</small>
           </span>
         </Link>

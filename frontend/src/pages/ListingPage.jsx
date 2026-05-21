@@ -21,7 +21,7 @@ import { getDashboardInsights, listRfqs, simulateBid } from '../api';
 import StatusBadge from '../components/StatusBadge';
 import { dateTime, minutesLabel, money, number } from '../utils/format';
 
-const WATCHLIST_STORAGE_KEY = 'gocomet.rfq.watchlist.v1';
+const WATCHLIST_STORAGE_KEY = 'rfq.watchlist.v1';
 
 function readWatchlist() {
   if (typeof window === 'undefined') return [];
