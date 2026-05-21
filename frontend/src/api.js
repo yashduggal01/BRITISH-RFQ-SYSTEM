@@ -1,10 +1,16 @@
 const BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options,
+    });
+  } catch (err) {
+    if (err instanceof TypeError) throw new Error('Network error — please check your connection.', { cause: err });
+    throw err;
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Request failed');

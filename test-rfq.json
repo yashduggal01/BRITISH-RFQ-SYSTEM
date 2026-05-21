@@ -1,1 +1,0 @@
-{"name":"Test Lane","bid_start_time":"2026-05-22T10:00","bid_close_time":"2026-05-22T10:30","forced_close_time":"2026-05-22T11:00","trigger_window":5,"extension_duration":3,"trigger_type":"BID_RECEIVED","lane_origin":"Mumbai","lane_destination":"Delhi","cargo_type":"Electronics","estimated_volume":"10 containers","budget":250000}

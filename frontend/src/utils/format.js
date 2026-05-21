@@ -11,9 +11,16 @@ export function number(value) {
   return new Intl.NumberFormat('en-IN').format(Number(value) || 0);
 }
 
+function safeDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export function dateTime(value) {
-  if (!value) return '-';
-  return new Date(value).toLocaleString([], {
+  const d = safeDate(value);
+  if (!d) return '-';
+  return d.toLocaleString([], {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
@@ -22,8 +29,9 @@ export function dateTime(value) {
 }
 
 export function fullDateTime(value) {
-  if (!value) return '-';
-  return new Date(value).toLocaleString([], {
+  const d = safeDate(value);
+  if (!d) return '-';
+  return d.toLocaleString([], {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

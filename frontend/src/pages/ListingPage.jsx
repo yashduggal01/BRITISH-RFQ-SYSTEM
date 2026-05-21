@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -60,15 +60,15 @@ function riskClass(level) {
 }
 
 function deriveSummary(rfqs) {
-  return rfqs.reduce((summary, rfq) => {
-    const phase = rfq.phase || rfq.status;
+  const summary = rfqs.reduce((acc, rfq) => {
+    const phase = rfq.phase || (rfq.status === 'ACTIVE' ? 'LIVE' : rfq.status);
     const savings = Number(rfq.savings || 0);
-    summary.total_auctions += 1;
-    summary.total_bids += Number(rfq.bid_count || 0);
-    summary.total_savings += savings;
-    summary.active_auctions += phase === 'LIVE' ? 1 : 0;
-    summary.at_risk += rfq.risk_level === 'HIGH' ? 1 : 0;
-    return summary;
+    acc.total_auctions += 1;
+    acc.total_bids += Number(rfq.bid_count || 0);
+    acc.total_savings += savings;
+    acc.active_auctions += phase === 'LIVE' ? 1 : 0;
+    acc.at_risk += rfq.risk_level === 'HIGH' ? 1 : 0;
+    return acc;
   }, {
     total_auctions: 0,
     active_auctions: 0,
@@ -76,6 +76,12 @@ function deriveSummary(rfqs) {
     total_savings: 0,
     at_risk: 0,
   });
+
+  summary.average_bids_per_rfq = summary.total_auctions > 0
+    ? Math.round((summary.total_bids / summary.total_auctions) * 10) / 10
+    : 0;
+
+  return summary;
 }
 
 function deriveLanes(rfqs) {
@@ -123,6 +129,7 @@ export default function ListingPage() {
   const [scenarioLoading, setScenarioLoading] = useState(false);
   const [scenarioError, setScenarioError] = useState('');
   const [scenario, setScenario] = useState(null);
+  const initialSelectionDone = useRef(false);
 
   const load = useCallback(async () => {
     try {
@@ -135,7 +142,9 @@ export default function ListingPage() {
         const nextRfqs = listResult.value.rfqs || [];
         setRfqs(nextRfqs);
         setError('');
-        if (!selectedRfqId && nextRfqs.length > 0) {
+
+        if (!initialSelectionDone.current && nextRfqs.length > 0) {
+          initialSelectionDone.current = true;
           const preferred = nextRfqs.find((rfq) => rfq.phase === 'LIVE') || nextRfqs[0];
           setSelectedRfqId(String(preferred.id));
           setScenarioPrice(preferred.lowest_bid ? String(Math.max(1, Number(preferred.lowest_bid) - 100)) : '');
@@ -157,7 +166,7 @@ export default function ListingPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedRfqId]);
+  }, []);
 
   useEffect(() => {
     const initial = setTimeout(load, 0);
@@ -498,7 +507,7 @@ export default function ListingPage() {
               </thead>
               <tbody>
                 {filteredRfqs.map((rfq) => {
-                  const saved = watchlist.includes(Number(rfq.id));
+                  const saved = watchlist.includes(Number(rfq.id)) && Number.isFinite(Number(rfq.id));
 
                   return (
                     <tr key={rfq.id}>

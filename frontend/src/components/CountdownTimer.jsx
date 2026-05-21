@@ -31,10 +31,10 @@ export default function CountdownTimer({ closeTime, forcedCloseTime, status, pha
   const isLive = state === 'LIVE' || (!phase && status === 'ACTIVE');
   const urgent = diff && diff.total <= 300;
   const progress = useMemo(() => {
-    const close = new Date(closeTime).getTime();
-    const forced = new Date(forcedCloseTime || closeTime).getTime();
-    if (!forcedCloseTime || forced <= close) return 0;
-    return Math.max(0, Math.min(100, ((now - close) / (forced - close)) * 100));
+    const close = new Date(closeTime);
+    const forced = new Date(forcedCloseTime || closeTime);
+    if (!forcedCloseTime || isNaN(close.getTime()) || isNaN(forced.getTime()) || forced <= close) return 0;
+    return Math.max(0, Math.min(100, ((now - close.getTime()) / (forced.getTime() - close.getTime())) * 100));
   }, [closeTime, forcedCloseTime, now]);
 
   return (

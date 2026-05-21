@@ -90,7 +90,7 @@ export default function DetailsPage() {
 
   if (loading) return <main className="page"><div className="loading-row">Loading auction</div></main>;
   if (error) return <main className="page"><div className="callout danger">{error}</div></main>;
-  if (!rfq) return null;
+  if (!rfq) return <main className="page"><div className="callout danger">RFQ not found.</div></main>;
 
   return (
     <main className="page">

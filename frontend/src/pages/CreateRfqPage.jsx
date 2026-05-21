@@ -36,8 +36,9 @@ export default function CreateRfqPage() {
 
   const windowStart = useMemo(() => {
     const close = new Date(form.bid_close_time);
-    close.setMinutes(close.getMinutes() - Number(form.trigger_window || 0));
-    return close;
+    const result = new Date(close.getTime());
+    result.setMinutes(close.getMinutes() - Number(form.trigger_window || 0));
+    return result;
   }, [form.bid_close_time, form.trigger_window]);
 
   function onChange(e) {
@@ -61,11 +62,15 @@ export default function CreateRfqPage() {
     try {
       const res = await createRfq({
         ...form,
-        trigger_window: Number(form.trigger_window),
-        extension_duration: Number(form.extension_duration),
+        trigger_window: Number(form.trigger_window) || 5,
+        extension_duration: Number(form.extension_duration) || 3,
         budget: Number(form.budget) || 0,
       });
-      navigate(`/rfq/${res.rfq.id}`);
+      if (res?.rfq?.id) {
+        navigate(`/rfq/${res.rfq.id}`);
+      } else {
+        setError('RFQ created but received an unexpected response.');
+      }
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Calculator, Send, Sparkles } from 'lucide-react';
 import { simulateBid, submitBid } from '../api';
 import { money } from '../utils/format';
@@ -27,17 +27,20 @@ export default function BidForm({ rfqId, currentLowest, status, phase, onBidPlac
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [simulation, setSimulation] = useState(null);
+  const simulationGen = useRef(0);
 
   const isDisabled = status !== 'ACTIVE' || (phase && phase !== 'LIVE');
   const derivedTotal = useMemo(() => (
     numeric(form.freight) + numeric(form.origin) + numeric(form.destination)
   ), [form.freight, form.origin, form.destination]);
-  const effectivePrice = numeric(form.price) || derivedTotal;
+  const effectivePrice = form.price !== '' ? numeric(form.price) : derivedTotal;
 
   useEffect(() => {
     if (!rfqId || isDisabled || effectivePrice <= 0) {
       return undefined;
     }
+
+    const gen = ++simulationGen.current;
 
     const timer = setTimeout(async () => {
       try {
@@ -47,9 +50,13 @@ export default function BidForm({ rfqId, currentLowest, status, phase, onBidPlac
           service_score: Number(form.service_score),
           carbon_kg: numeric(form.carbon_kg),
         });
-        setSimulation(res.simulation);
+        if (gen === simulationGen.current) {
+          setSimulation(res.simulation);
+        }
       } catch {
-        setSimulation(null);
+        if (gen === simulationGen.current) {
+          setSimulation(null);
+        }
       }
     }, 450);
 
@@ -69,7 +76,7 @@ export default function BidForm({ rfqId, currentLowest, status, phase, onBidPlac
     setError('');
     setSuccess('');
 
-    if (!form.supplier_name.trim()) return setError('Carrier name is required.');
+    if (!form.supplier_name?.trim()) return setError('Carrier name is required.');
     if (effectivePrice <= 0) return setError('Enter a positive total bid.');
     if (currentLowest !== null && effectivePrice >= Number(currentLowest)) {
       return setError(`Bid must be lower than ${money(currentLowest)}.`);
