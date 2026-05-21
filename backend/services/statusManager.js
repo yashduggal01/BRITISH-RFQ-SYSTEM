@@ -1,5 +1,5 @@
 const { getDb } = require('../db');
-const { formatDbDateTime } = require('../utils/date');
+const { formatDbDateTime, parseDbDateTime } = require('../utils/date');
 
 async function updateRfqStatus(rfqId) {
   const pool = await getDb();
@@ -13,9 +13,9 @@ async function updateRfqStatus(rfqId) {
     const rfq = rfqRows[0];
     let newStatus = rfq.status;
 
-    if (now >= new Date(rfq.forced_close_time)) {
+    if (now >= parseDbDateTime(rfq.forced_close_time)) {
       newStatus = 'FORCE_CLOSED';
-    } else if (now > new Date(rfq.current_close_time)) {
+    } else if (now > parseDbDateTime(rfq.current_close_time)) {
       newStatus = 'CLOSED';
     } else {
       newStatus = 'ACTIVE';

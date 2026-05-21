@@ -1,4 +1,4 @@
-const { formatDbDateTime } = require('../utils/date');
+const { formatDbDateTime, parseDbDateTime } = require('../utils/date');
 
 function asNumber(value, fallback = 0) {
   const number = Number(value);
@@ -10,9 +10,9 @@ function minutesBetween(from, to) {
 }
 
 function getAuctionPhase(rfq, now = new Date()) {
-  const start = new Date(rfq.bid_start_time);
-  const close = new Date(rfq.current_close_time);
-  const forced = new Date(rfq.forced_close_time);
+  const start = parseDbDateTime(rfq.bid_start_time);
+  const close = parseDbDateTime(rfq.current_close_time);
+  const forced = parseDbDateTime(rfq.forced_close_time);
 
   if (now >= forced) return 'FORCE_CLOSED';
   if (now > close) return 'CLOSED';
@@ -49,7 +49,7 @@ function buildRfqAnalytics(rfq, bids = [], events = [], now = new Date()) {
   const savings = baseline && lowestBid !== null ? Math.max(0, baseline - lowestBid) : 0;
   const savingsRate = baseline && lowestBid !== null ? Math.round((savings / baseline) * 1000) / 10 : 0;
   const spreadToL2 = lowestBid !== null && secondBid !== null ? Math.max(0, secondBid - lowestBid) : 0;
-  const minutesToClose = minutesBetween(now, rfq.current_close_time);
+  const minutesToClose = minutesBetween(now, parseDbDateTime(rfq.current_close_time));
   const extensionCount = events.filter((event) => event.type === 'TIME_EXTENDED').length;
   const supplierCount = new Set(enrichedBids.map((bid) => bid.supplier_name)).size;
 
@@ -116,8 +116,8 @@ function simulateBid(rfq, bids, price, options = {}, now = new Date()) {
   const candidateRank = ranked.find((bid) => bid.simulated);
   const validLowerBid = currentLowest === null || asNumber(price) < currentLowest;
   const bidTime = now.getTime();
-  const closeTime = new Date(rfq.current_close_time).getTime();
-  const forcedCloseTime = new Date(rfq.forced_close_time).getTime();
+  const closeTime = parseDbDateTime(rfq.current_close_time).getTime();
+  const forcedCloseTime = parseDbDateTime(rfq.forced_close_time).getTime();
   const windowStart = closeTime - asNumber(rfq.trigger_window, 5) * 60 * 1000;
 
   let triggerMatched = false;

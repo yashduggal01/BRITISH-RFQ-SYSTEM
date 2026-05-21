@@ -48,4 +48,25 @@ function formatDbDate(value) {
   ].join('-');
 }
 
-module.exports = { formatDbDateTime, formatDbDate };
+function parseDbDateTime(value) {
+  if (value instanceof Date) return value;
+  if (!value || typeof value !== 'string') return new Date(value);
+  
+  // Parse "YYYY-MM-DD HH:MM:SS" as local time, not UTC
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})$/);
+  if (match) {
+    const [, year, month, day, hours, minutes, seconds] = match;
+    return new Date(
+      parseInt(year, 10),
+      parseInt(month, 10) - 1,
+      parseInt(day, 10),
+      parseInt(hours, 10),
+      parseInt(minutes, 10),
+      parseInt(seconds, 10)
+    );
+  }
+  
+  return new Date(value);
+}
+
+module.exports = { formatDbDateTime, formatDbDate, parseDbDateTime };
